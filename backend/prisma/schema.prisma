@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id              Int       @id @default(autoincrement())
+  name            String
+  date            DateTime  @db.Date
+  photosAvailable Boolean   @default(true)
+  photoDeletedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  students        Student[]
+
+  @@unique([name, date])
+}
+
+model Student {
+  id             Int      @id @default(autoincrement())
+  sequenceNumber Int
+  nim            String   @unique
+  name           String
+  eventId        Int
+  isAbsent       Boolean  @default(false)
+  photo1Key      String?
+  photo2Key      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@index([eventId])
+  @@unique([eventId, sequenceNumber])
+}
