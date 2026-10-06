@@ -4,11 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "dev": "tsx watch src/server.ts",
-  "build": "tsc",
-  "test": "npm run build",
-  "start": "node dist/src/server.js"
-
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/src/server.js"
   },
   "keywords": [],
   "author": "",
