@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: import.meta.env.PROD ? <UniversitasTerbuka /> : <Home />,
       },
       {
         path: "/about",
