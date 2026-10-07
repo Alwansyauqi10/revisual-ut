@@ -13,8 +13,7 @@ function PhotoResult() {
 
   const nim = searchParams.get("nim");
 
-  const [student, setStudent] =
-    useState<PublicStudent | null>(null);
+  const [student, setStudent] = useState<PublicStudent | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -35,24 +34,16 @@ function PhotoResult() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response =
-          await searchStudentByNimService(nim);
+        const response = await searchStudentByNimService(nim);
 
         setStudent(response.data);
       } catch (error: any) {
-        console.error(
-          "GAGAL MENGAMBIL STUDENT:",
-          error,
-        );
+        console.error("GAGAL MENGAMBIL STUDENT:", error);
 
         if (error?.response?.status === 404) {
-          setErrorMessage(
-            "We couldn't find a student with that NIM.",
-          );
+          setErrorMessage("We couldn't find a student with that NIM.");
         } else {
-          setErrorMessage(
-            "Something went wrong. Please try again.",
-          );
+          setErrorMessage("Something went wrong. Please try again.");
         }
       } finally {
         setIsLoading(false);
@@ -66,26 +57,19 @@ function PhotoResult() {
   // DOWNLOAD PHOTO
   // =====================================================
 
-  const handleDownload = async (
-    url: string,
-    fileName: string,
-  ) => {
+  const handleDownload = async (url: string, fileName: string) => {
     try {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(
-          "Failed to download photo.",
-        );
+        throw new Error("Failed to download photo.");
       }
 
       const blob = await response.blob();
 
-      const blobUrl =
-        window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
 
-      const link =
-        document.createElement("a");
+      const link = document.createElement("a");
 
       link.href = blobUrl;
       link.download = fileName;
@@ -98,10 +82,7 @@ function PhotoResult() {
 
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
-      console.error(
-        "GAGAL DOWNLOAD FOTO:",
-        error,
-      );
+      console.error("GAGAL DOWNLOAD FOTO:", error);
     }
   };
 
@@ -138,8 +119,7 @@ function PhotoResult() {
           </h1>
 
           <p className="mt-6 max-w-md text-sm leading-6 text-white/45">
-            {errorMessage ??
-              "We couldn't find the student information."}
+            {errorMessage ?? "We couldn't find the student information."}
           </p>
 
           <Link
@@ -157,13 +137,9 @@ function PhotoResult() {
   // PHOTO URL
   // =====================================================
 
-  const photo1Url = student.photo1Key
-    ? `${API_URL}${student.photo1Key}`
-    : null;
+  const photo1Url = student.photo1Key ? `${API_URL}${student.photo1Key}` : null;
 
-  const photo2Url = student.photo2Key
-    ? `${API_URL}${student.photo2Key}`
-    : null;
+  const photo2Url = student.photo2Key ? `${API_URL}${student.photo2Key}` : null;
 
   // =====================================================
   // PHOTO NOT AVAILABLE
@@ -184,9 +160,22 @@ function PhotoResult() {
           </h1>
 
           <p className="mt-6 max-w-md text-sm leading-6 text-white/45">
-            Hi {student.name}, your graduation photos
-            are not available yet. Please check again
-            later.
+            Hi {student.name}, your graduation photos are not available yet.{" "}
+            <a
+              href={`https://wa.me/6285780709579?text=${encodeURIComponent(
+                `Halo Revisual Production, saya ingin meminta bantuan terkait foto wisuda.
+
+                  Nama:
+                  NIM:
+                  Kendala:
+                  `,
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-4 transition-colors hover:text-white"
+            >
+              Click for Contact Admin
+            </a>
           </p>
 
           <Link
@@ -204,13 +193,14 @@ function PhotoResult() {
   // DATE
   // =====================================================
 
-  const formattedDate = new Date(
-    student.event.date,
-  ).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const formattedDate = new Date(student.event.date).toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    },
+  );
 
   // =====================================================
   // MAIN
@@ -288,8 +278,7 @@ function PhotoResult() {
               <p className="mt-5 max-w-xl text-xs leading-6 text-white/50 sm:mt-8 sm:text-base sm:leading-7">
                 Here are your graduation photos.
                 <br className="hidden sm:block" />
-                Thank you for being part of this special
-                moment.
+                Thank you for being part of this special moment.
               </p>
             </div>
 
@@ -304,9 +293,7 @@ function PhotoResult() {
                     NIM
                   </p>
 
-                  <p className="mt-2 text-sm text-white/80">
-                    {student.nim}
-                  </p>
+                  <p className="mt-2 text-sm text-white/80">{student.nim}</p>
                 </div>
 
                 <div className="mt-7">
@@ -314,9 +301,7 @@ function PhotoResult() {
                     Graduation Date
                   </p>
 
-                  <p className="mt-2 text-sm text-white/80">
-                    {formattedDate}
-                  </p>
+                  <p className="mt-2 text-sm text-white/80">{formattedDate}</p>
                 </div>
 
                 <div className="mt-7">
@@ -433,8 +418,7 @@ function PhotoResult() {
                   </p>
 
                   <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
-                    A story of dedication, growth, and new
-                    beginnings.
+                    A story of dedication, growth, and new beginnings.
                   </p>
                 </div>
 
@@ -443,10 +427,7 @@ function PhotoResult() {
                 <button
                   type="button"
                   onClick={() =>
-                    handleDownload(
-                      photo1Url,
-                      `${student.nim}-photo-1.JPG`,
-                    )
+                    handleDownload(photo1Url, `${student.nim}-photo-1.JPG`)
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
                 >
@@ -502,10 +483,7 @@ function PhotoResult() {
                 <button
                   type="button"
                   onClick={() =>
-                    handleDownload(
-                      photo2Url,
-                      `${student.nim}-photo-2.JPG`,
-                    )
+                    handleDownload(photo2Url, `${student.nim}-photo-2.JPG`)
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
                 >
@@ -536,9 +514,8 @@ function PhotoResult() {
 
             <div className="lg:pb-1 lg:text-right">
               <p className="max-w-lg text-xs leading-6 text-white/40 sm:ml-auto sm:text-sm sm:leading-7">
-                May this milestone be the beginning of new
-                opportunities, bigger dreams, and more
-                meaningful journeys ahead.
+                May this milestone be the beginning of new opportunities, bigger
+                dreams, and more meaningful journeys ahead.
               </p>
 
               <Link
