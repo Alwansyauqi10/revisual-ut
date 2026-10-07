@@ -39,7 +39,7 @@ interface Event {
   date: string;
 }
 
-const API_URL = "http://localhost:8000";
+const API_URL = import.meta.env.VITE_BASE_URL_API;
 
 function Students() {
   const { eventId } = useParams();

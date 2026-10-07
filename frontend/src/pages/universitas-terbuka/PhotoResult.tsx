@@ -6,7 +6,7 @@ import {
   type PublicStudent,
 } from "@/services/publicStudentService";
 
-const API_URL = "import.meta.env.VITE_BASE_URL_API;";
+const API_URL = import.meta.env.VITE_BASE_URL_API;
 
 function PhotoResult() {
   const [searchParams] = useSearchParams();
