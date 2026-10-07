@@ -445,7 +445,7 @@ function PhotoResult() {
                   onClick={() =>
                     handleDownload(
                       photo1Url,
-                      `${student.nim}-photo-1.png`,
+                      `${student.nim}-photo-1.JPG`,
                     )
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
@@ -504,7 +504,7 @@ function PhotoResult() {
                   onClick={() =>
                     handleDownload(
                       photo2Url,
-                      `${student.nim}-photo-2.png`,
+                      `${student.nim}-photo-2.JPG`,
                     )
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"

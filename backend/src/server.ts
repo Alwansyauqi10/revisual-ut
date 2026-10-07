@@ -20,9 +20,20 @@ import {
   requireAdmin,
 } from "./middleware/admin.middleware.js";
 
+// console.log("LOGIN SERVICE HIT");
+
+// console.log(
+//   "DATABASE:",
+//   process.env.DATABASE_URL?.replace(
+//     /\/\/.*?:.*?@/,
+//     "//***:***@",
+//   ),
+// );
+
 const app = express();
 
-const PORT = 8000;
+// const PORT = 8000;
+const PORT = Number(process.env.PORT) || 8000;
 
 app.use(cors());
 
@@ -170,11 +181,14 @@ SERVER
 =====================================================
 */
 
-app.listen(
-  PORT,
-  () => {
-    console.log(
-      `Server running on http://localhost:${PORT}`,
-    );
-  },
-);
+// app.listen(
+//   PORT,
+//   () => {
+//     console.log(
+//       `Server running on http://localhost:${PORT}`,
+//     );
+//   },
+// );
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

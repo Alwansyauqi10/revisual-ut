@@ -4,9 +4,9 @@ import argon2 from "argon2";
 
 import { prisma } from "../lib/prisma.js";
 
-const name = "Revisual Admin";
-const email = "admin@revisualproduction.com";
-const password = "admin123";
+const name = "Admin Salsa";
+const email = "salsa@revisualproduction.com";
+const password = "salsa123";
 
 const createAdmin = async () => {
   try {
