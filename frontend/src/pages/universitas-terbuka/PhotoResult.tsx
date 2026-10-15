@@ -19,6 +19,19 @@ function PhotoResult() {
   const [errorMessage, setErrorMessage] = useState("");
 
   // =====================================================
+  // INSTAGRAM FOLLOW PROMPT
+  // =====================================================
+
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [pendingDownload, setPendingDownload] = useState<{
+    url: string;
+    fileName: string;
+  } | null>(null);
+
+  const INSTAGRAM_URL =
+    "https://www.instagram.com/revisualproduction.com/";
+
+  // =====================================================
   // GET STUDENT
   // =====================================================
 
@@ -85,6 +98,44 @@ function PhotoResult() {
       console.error("GAGAL DOWNLOAD FOTO:", error);
     }
   };
+
+  // =====================================================
+  // INSTAGRAM PROMPT / DOWNLOAD FLOW
+  // =====================================================
+
+  const getInstagramPromptKey = () =>
+    `revisual-instagram-prompted-${student?.nim ?? nim ?? "unknown"}`;
+
+  const handleDownloadClick = (url: string, fileName: string) => {
+    const storageKey = getInstagramPromptKey();
+
+    // If this NIM has already seen the prompt, download immediately.
+    if (localStorage.getItem(storageKey) === "true") {
+      void handleDownload(url, fileName);
+      return;
+    }
+
+    setPendingDownload({ url, fileName });
+    setShowFollowModal(true);
+  };
+
+  const handleFollowInstagram = () => {
+    if (!pendingDownload) return;
+
+    // Open Instagram in a new tab. Following is optional.
+    window.open(INSTAGRAM_URL, "_blank", "noopener,noreferrer");
+
+    localStorage.setItem(getInstagramPromptKey(), "true");
+
+    const { url, fileName } = pendingDownload;
+
+    setShowFollowModal(false);
+    setPendingDownload(null);
+
+    void handleDownload(url, fileName);
+  };
+
+  
 
   // =====================================================
   // LOADING
@@ -427,7 +478,10 @@ function PhotoResult() {
                 <button
                   type="button"
                   onClick={() =>
-                    handleDownload(photo1Url, `${student.nim}-photo-1.JPG`)
+                    handleDownloadClick(
+                      photo1Url,
+                      `${student.nim}-photo-1.JPG`,
+                    )
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
                 >
@@ -483,7 +537,10 @@ function PhotoResult() {
                 <button
                   type="button"
                   onClick={() =>
-                    handleDownload(photo2Url, `${student.nim}-photo-2.JPG`)
+                    handleDownloadClick(
+                      photo2Url,
+                      `${student.nim}-photo-2.JPG`,
+                    )
                   }
                   className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
                 >
@@ -528,6 +585,74 @@ function PhotoResult() {
           </div>
         </section>
       </div>
+
+      {/* =================================================
+          INSTAGRAM FOLLOW MODAL
+      ================================================= */}
+
+      {showFollowModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-5 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="follow-instagram-title"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#071A33] p-7 text-white shadow-2xl sm:p-9"
+          >
+            <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl bg-white text-[#071A33]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="25"
+                height="25"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" />
+              </svg>
+            </div>
+
+            <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-white/40">
+              A Little Support
+            </p>
+
+            <h2
+              id="follow-instagram-title"
+              className="mt-3 text-2xl font-semibold tracking-tight"
+            >
+              Before you download...
+            </h2>
+
+            <p className="mt-4 text-sm leading-6 text-white/55">
+              Don&apos;t forget to follow our Instagram for more graduation
+              moments, updates, and memories.
+            </p>
+
+            <p className="mt-3 text-sm font-medium text-white">
+              @revisualproduction.com
+            </p>
+
+            <button
+              type="button"
+              onClick={handleFollowInstagram}
+              className="mt-7 w-full rounded-full bg-white px-6 py-3.5 text-sm font-medium text-[#071A33] transition hover:bg-white/90"
+            >
+              Follow Instagram ↗
+            </button>
+
+      
+
+            <p className="mt-5 text-center text-[11px] text-white/30">
+              Thank you for supporting us.
+            </p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
