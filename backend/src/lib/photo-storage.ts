@@ -1,10 +1,22 @@
+
 import fs from "node:fs";
 import path from "node:path";
 
 const uploadDirectory = path.resolve(
-  process.cwd(),
-  "uploads/photos",
+  process.env.PHOTO_STORAGE_DIR ||
+    path.join(process.cwd(), "uploads", "photos"),
 );
+
+export const ensurePhotoStorageDirectory = () => {
+  fs.mkdirSync(uploadDirectory, {
+    recursive: true,
+  });
+};
+
+export const getPhotoStorageDirectory = () => {
+  ensurePhotoStorageDirectory();
+  return uploadDirectory;
+};
 
 export const deletePhotoFile = (
   photoKey: string | null | undefined,
@@ -14,27 +26,16 @@ export const deletePhotoFile = (
   }
 
   const filename = path.basename(photoKey);
-
   const filePath = path.join(
-    uploadDirectory,
+    getPhotoStorageDirectory(),
     filename,
   );
 
-  if (!filePath.startsWith(uploadDirectory)) {
-    console.warn(
-      `Blocked invalid photo path: ${photoKey}`,
-    );
-
-    return;
-  }
-
-  if (!fs.existsSync(filePath)) {
-    return;
-  }
-
   try {
-    fs.unlinkSync(filePath);
-    console.log(`Deleted photo: ${filePath}`);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`Deleted photo: ${filePath}`);
+    }
   } catch (error) {
     console.error(
       `Failed to delete photo: ${filePath}`,

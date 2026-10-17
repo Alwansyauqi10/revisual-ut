@@ -1,28 +1,34 @@
+
 import multer from "multer";
 import path from "node:path";
-import fs from "node:fs";
-import type { NextFunction, Request, Response } from "express";
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from "express";
 
-const uploadDirectory = path.resolve(
-  process.cwd(),
-  "uploads/photos",
-);
-
-if (!fs.existsSync(uploadDirectory)) {
-  fs.mkdirSync(uploadDirectory, {
-    recursive: true,
-  });
-}
+import {
+  getPhotoStorageDirectory,
+} from "../lib/photo-storage.js";
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, uploadDirectory);
+    try {
+      cb(null, getPhotoStorageDirectory());
+    } catch (error) {
+      cb(
+        error instanceof Error
+          ? error
+          : new Error("Failed to prepare photo storage."),
+        "",
+      );
+    }
   },
 
   filename: (_req, file, cb) => {
     const extension = path.extname(
       file.originalname,
-    );
+    ).toLowerCase();
 
     const filename = `${Date.now()}-${Math.round(
       Math.random() * 1e9,
@@ -49,7 +55,6 @@ const fileFilter: multer.Options["fileFilter"] = (
         "Only JPG, PNG, and WebP images are allowed.",
       ),
     );
-
     return;
   }
 
@@ -77,7 +82,6 @@ export const handleUploadError = (
         message:
           "Each photo must be smaller than 10 MB.",
       });
-
       return;
     }
 
@@ -85,7 +89,6 @@ export const handleUploadError = (
       res.status(400).json({
         message: "Maximum 2 photos are allowed.",
       });
-
       return;
     }
 
@@ -94,14 +97,12 @@ export const handleUploadError = (
         message:
           "Unexpected file field. Use photo1 and photo2.",
       });
-
       return;
     }
 
     res.status(400).json({
       message: error.message,
     });
-
     return;
   }
 
@@ -109,7 +110,6 @@ export const handleUploadError = (
     res.status(400).json({
       message: error.message,
     });
-
     return;
   }
 

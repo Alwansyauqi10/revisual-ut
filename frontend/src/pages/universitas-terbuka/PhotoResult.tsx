@@ -29,7 +29,7 @@ function PhotoResult() {
   } | null>(null);
 
   const INSTAGRAM_URL =
-    "https://www.instagram.com/revisualproduction.com/";
+    "https://www.instagram.com/revisualproduction/";
 
   // =====================================================
   // GET STUDENT
@@ -634,7 +634,7 @@ function PhotoResult() {
             </p>
 
             <p className="mt-3 text-sm font-medium text-white">
-              @revisualproduction.com
+              @revisualproduction
             </p>
 
             <button

@@ -5,6 +5,9 @@ import crypto from "node:crypto";
 import unzipper from "unzipper";
 
 import { prisma } from "../lib/prisma.js";
+import {
+  getPhotoStorageDirectory,
+} from "../lib/photo-storage.js";
 
 import {
   buildStudentPreview,
@@ -18,11 +21,7 @@ const BULK_IMPORT_ROOT = path.resolve(
   "bulk-imports",
 );
 
-const PHOTO_ROOT = path.resolve(
-  process.cwd(),
-  "uploads",
-  "photos",
-);
+const getPhotoRoot = () => getPhotoStorageDirectory();
 
 const MAX_ZIP_SIZE =
   2 * 1024 * 1024 * 1024; // 2 GB
@@ -81,7 +80,7 @@ const ensureBulkImportRoot =
 const ensurePhotoRoot =
   async () => {
     await fs.mkdir(
-      PHOTO_ROOT,
+      getPhotoRoot(),
       {
         recursive: true,
       },
@@ -422,17 +421,17 @@ const getPhotoDestination =
         prefix.length,
       );
 
+    const photoRoot = getPhotoRoot();
     const destinationPath =
       path.resolve(
-        PHOTO_ROOT,
+        photoRoot,
         relativePath,
       );
 
     if (
-      destinationPath !==
-        PHOTO_ROOT &&
+      destinationPath !== photoRoot &&
       !isPathInside(
-        PHOTO_ROOT,
+        photoRoot,
         destinationPath,
       )
     ) {

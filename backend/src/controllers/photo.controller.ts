@@ -1,8 +1,13 @@
+
 import type { Request, Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
 
 import { prisma } from "../lib/prisma.js";
+import {
+  getPhotoStorageDirectory,
+} from "../lib/photo-storage.js";
+
 import {
   updateStudentPhotosService,
 } from "../services/student.service.js";
@@ -45,11 +50,11 @@ export const uploadStudentPhotosController = async (
     );
 
     if (!student) {
-      if (photo1) {
+      if (photo1 && fs.existsSync(photo1.path)) {
         fs.unlinkSync(photo1.path);
       }
 
-      if (photo2) {
+      if (photo2 && fs.existsSync(photo2.path)) {
         fs.unlinkSync(photo2.path);
       }
 
@@ -64,7 +69,7 @@ export const uploadStudentPhotosController = async (
       data: student,
     });
   } catch (error) {
-    console.error(error);
+    console.error("UPLOAD STUDENT PHOTOS ERROR:", error);
 
     res.status(500).json({
       message: "Internal server error",
@@ -121,9 +126,8 @@ export const downloadStudentPhotoController = async (
 
     const filename = path.basename(photoKey);
 
-    const filePath = path.resolve(
-      process.cwd(),
-      "uploads/photos",
+    const filePath = path.join(
+      getPhotoStorageDirectory(),
       filename,
     );
 
@@ -136,17 +140,15 @@ export const downloadStudentPhotoController = async (
 
     const extension = path.extname(filename);
 
-    const downloadFilename = `${student.nim}-photo-${photoNumber}${extension}`;
+    const downloadFilename =
+      `${student.nim}-photo-${photoNumber}${extension}`;
 
     res.download(
       filePath,
       downloadFilename,
       (error) => {
         if (error) {
-          console.error(
-            "PHOTO DOWNLOAD ERROR:",
-            error,
-          );
+          console.error("PHOTO DOWNLOAD ERROR:", error);
 
           if (!res.headersSent) {
             res.status(500).json({
@@ -157,10 +159,7 @@ export const downloadStudentPhotoController = async (
       },
     );
   } catch (error) {
-    console.error(
-      "DOWNLOAD PHOTO ERROR:",
-      error,
-    );
+    console.error("DOWNLOAD PHOTO ERROR:", error);
 
     res.status(500).json({
       message: "Internal server error",
