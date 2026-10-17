@@ -23,8 +23,10 @@ import {
 
 import {
   analyzeBulkImportService,
+  getBulkImportProgressService,
   importBulkImportService,
   type BulkImportAnalysis,
+  type BulkImportProgress,
 } from "@/services/bulkImportService";
 
 const formatNumber = (
@@ -96,6 +98,11 @@ export default function BulkImport() {
   ] = useState(false);
 
   const [
+    importProgress,
+    setImportProgress,
+  ] = useState<BulkImportProgress | null>(null);
+
+  const [
     reviewed,
     setReviewed,
   ] = useState(false);
@@ -120,6 +127,7 @@ export default function BulkImport() {
     setSuccessMessage("");
     setAnalysis(null);
     setReviewed(false);
+    setImportProgress(null);
 
     if (!file) {
       setSelectedFile(null);
@@ -201,42 +209,91 @@ export default function BulkImport() {
         setErrorMessage(
           "Please confirm that you have reviewed the import.",
         );
-
         return;
       }
 
-      if (
-        analysis.summary
-          .conflicts > 0
-      ) {
+      if (analysis.summary.conflicts > 0) {
         setErrorMessage(
           "This import contains conflicts. Resolve them before importing.",
         );
-
         return;
       }
 
-      if (
-        analysis.summary
-          .invalid > 0
-      ) {
+      if (analysis.summary.invalid > 0) {
         setErrorMessage(
           "This import contains invalid folders. Fix them before importing.",
         );
-
         return;
       }
+
+      let shouldPoll = true;
+
+      const pollProgress = async () => {
+        while (shouldPoll) {
+          try {
+            const progressResponse =
+              await getBulkImportProgressService(
+                numericEventId,
+                analysis.batchId,
+              );
+
+            setImportProgress(progressResponse.data);
+
+            if (
+              progressResponse.data.status === "completed" ||
+              progressResponse.data.status === "failed"
+            ) {
+              break;
+            }
+          } catch {
+            // The backend may not have registered progress yet.
+            // Keep polling while the import request is running.
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+      };
+
+      let progressPolling: Promise<void> | null = null;
 
       try {
         setIsImporting(true);
         setErrorMessage("");
         setSuccessMessage("");
+        setImportProgress({
+          batchId: analysis.batchId,
+          eventId: numericEventId,
+          status: "processing",
+          phase: "validating",
+          processedStudents: 0,
+          totalStudents: analysis.summary.totalStudents,
+          percent: 0,
+          message: "Preparing import...",
+        });
+
+        progressPolling = pollProgress();
 
         const response =
           await importBulkImportService(
             numericEventId,
             analysis.batchId,
           );
+
+        shouldPoll = false;
+        if (progressPolling) {
+          await progressPolling;
+        }
+
+        setImportProgress({
+          batchId: analysis.batchId,
+          eventId: numericEventId,
+          status: "completed",
+          phase: "completed",
+          processedStudents: response.data.importedCount,
+          totalStudents: analysis.summary.totalStudents,
+          percent: 100,
+          message: "Import completed successfully.",
+        });
 
         setSuccessMessage(
           `Import completed. ${formatNumber(
@@ -250,17 +307,29 @@ export default function BulkImport() {
         setSelectedFile(null);
         setReviewed(false);
 
-        if (
-          fileInputRef.current
-        ) {
-          fileInputRef.current.value =
-            "";
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
         }
       } catch (error) {
-        setErrorMessage(
-          getErrorMessage(error),
+        shouldPoll = false;
+        if (progressPolling) {
+          await progressPolling;
+        }
+
+        setImportProgress((current) =>
+          current
+            ? {
+                ...current,
+                status: "failed",
+                phase: "failed",
+                message: getErrorMessage(error),
+              }
+            : null,
         );
+
+        setErrorMessage(getErrorMessage(error));
       } finally {
+        shouldPoll = false;
         setIsImporting(false);
       }
     };
@@ -270,6 +339,7 @@ export default function BulkImport() {
       setSelectedFile(null);
       setAnalysis(null);
       setReviewed(false);
+      setImportProgress(null);
       setErrorMessage("");
       setSuccessMessage("");
 
@@ -766,6 +836,86 @@ export default function BulkImport() {
                 </table>
               </div>
             </div>
+
+            {/* IMPORT PROGRESS */}
+            {(isImporting || importProgress) && (
+              <div className="mt-6 rounded-2xl border border-[#071A33]/15 bg-white p-6 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#071A33]/5 text-[#071A33]">
+                      {importProgress?.status === "completed" ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : importProgress?.status === "failed" ? (
+                        <XCircle className="h-5 w-5" />
+                      ) : (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-[#071A33]">
+                        {importProgress?.status === "completed"
+                          ? "Import completed"
+                          : importProgress?.status === "failed"
+                            ? "Import failed"
+                            : "Importing students"}
+                      </h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {importProgress?.message ?? "Preparing import..."}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-lg font-bold tabular-nums text-[#071A33]">
+                    {Math.max(0, Math.min(100, importProgress?.percent ?? 0))}%
+                  </span>
+                </div>
+
+                <div
+                  className="mt-5 h-3 overflow-hidden rounded-full bg-gray-100"
+                  role="progressbar"
+                  aria-label="Bulk import progress"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.max(0, Math.min(100, importProgress?.percent ?? 0))}
+                >
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      importProgress?.status === "failed"
+                        ? "bg-red-500"
+                        : importProgress?.status === "completed"
+                          ? "bg-green-500"
+                          : "bg-[#071A33]"
+                    }`}
+                    style={{
+                      width: `${Math.max(0, Math.min(100, importProgress?.percent ?? 0))}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-3 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                  <span>
+                    {formatNumber(importProgress?.processedStudents ?? 0)} of{" "}
+                    {formatNumber(
+                      importProgress?.totalStudents ??
+                        analysis.summary.totalStudents,
+                    )}{" "}
+                    students processed
+                  </span>
+                  <span>
+                    {importProgress?.phase === "copying_photos"
+                      ? "Processing photos"
+                      : importProgress?.phase === "saving_database"
+                        ? "Saving student data"
+                        : importProgress?.phase === "validating"
+                          ? "Validating student data"
+                          : importProgress?.phase === "completed"
+                            ? "Finished"
+                            : importProgress?.phase === "failed"
+                              ? "Stopped"
+                              : "Starting"}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* APPROVAL */}
             <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">

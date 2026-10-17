@@ -30,6 +30,57 @@ const MAX_STUDENTS = 5000;
 
 const MAX_FILES = 15000;
 
+/*
+=====================================================
+BULK IMPORT PROGRESS (in-memory, single backend process)
+=====================================================
+*/
+
+export interface BulkImportProgress {
+  batchId: string;
+  eventId: number;
+  status: "processing" | "completed" | "failed";
+  phase: "validating" | "copying_photos" | "saving_database" | "completed" | "failed";
+  processedStudents: number;
+  totalStudents: number;
+  percent: number;
+  message: string;
+}
+
+const bulkImportProgress = new Map<string, BulkImportProgress>();
+const bulkImportProgressSteps = new Map<string, { completed: number; total: number }>();
+
+const setBulkImportProgress = (
+  batchId: string,
+  update: Partial<BulkImportProgress>,
+) => {
+  const current = bulkImportProgress.get(batchId);
+  if (!current) return;
+  const next = { ...current, ...update };
+  const steps = bulkImportProgressSteps.get(batchId);
+  if (steps && steps.total > 0 && next.status === "processing") {
+    next.percent = Math.min(99, Math.floor((steps.completed / steps.total) * 100));
+  }
+  bulkImportProgress.set(batchId, next);
+};
+
+const completeBulkImportProgressStep = (batchId: string) => {
+  const steps = bulkImportProgressSteps.get(batchId);
+  if (!steps) return;
+  steps.completed = Math.min(steps.completed + 1, steps.total);
+  setBulkImportProgress(batchId, {});
+};
+
+export const getBulkImportProgressService = (
+  eventId: number,
+  batchId: string,
+): BulkImportProgress | null => {
+  const progress = bulkImportProgress.get(batchId);
+  if (!progress || progress.eventId !== eventId) return null;
+  return { ...progress };
+};
+
+
 interface AnalyzeResult {
   batchId: string;
 
@@ -971,6 +1022,22 @@ export const importBulkImportBatchService =
     const students: BulkImportStudentPreview[] =
       [];
 
+    const totalStudents = studentFolders.length;
+    bulkImportProgressSteps.set(batchId, {
+      completed: 0,
+      total: Math.max(1, totalStudents * 3),
+    });
+    bulkImportProgress.set(batchId, {
+      batchId,
+      eventId,
+      status: "processing",
+      phase: "validating",
+      processedStudents: 0,
+      totalStudents,
+      percent: 0,
+      message: "Memvalidasi data siswa...",
+    });
+
     const seenNims =
       new Set<string>();
 
@@ -1098,7 +1165,18 @@ export const importBulkImportBatchService =
           photos,
         ),
       );
+
+      completeBulkImportProgressStep(batchId);
+      setBulkImportProgress(batchId, {
+        processedStudents: Math.min(seenNims.size, totalStudents),
+      });
     }
+
+    setBulkImportProgress(batchId, {
+      phase: "copying_photos",
+      processedStudents: 0,
+      message: "Menyalin foto siswa...",
+    });
 
     /*
     -------------------------------------------------
@@ -1209,7 +1287,18 @@ export const importBulkImportBatchService =
 
           photo2Key,
         });
+
+        completeBulkImportProgressStep(batchId);
+        setBulkImportProgress(batchId, {
+          processedStudents: preparedStudents.length,
+        });
       }
+
+      setBulkImportProgress(batchId, {
+        phase: "saving_database",
+        processedStudents: 0,
+        message: "Menyimpan data ke database...",
+      });
 
       /*
       =================================================
@@ -1336,6 +1425,10 @@ export const importBulkImportBatchService =
                     existing.photo2Key,
                 });
 
+                completeBulkImportProgressStep(batchId);
+                setBulkImportProgress(batchId, {
+                  processedStudents: result.length,
+                });
                 continue;
               }
 
@@ -1384,6 +1477,11 @@ export const importBulkImportBatchService =
 
                 oldPhoto2Key:
                   null,
+              });
+
+              completeBulkImportProgressStep(batchId);
+              setBulkImportProgress(batchId, {
+                processedStudents: result.length,
               });
             }
 
@@ -1492,6 +1590,18 @@ export const importBulkImportBatchService =
       const photosImported =
         copiedPhotoKeys.length;
 
+      const progress = bulkImportProgress.get(batchId);
+      if (progress) {
+        progress.status = "completed";
+        progress.phase = "completed";
+        progress.processedStudents = importedStudents.length;
+        progress.totalStudents = importedStudents.length;
+        progress.percent = 100;
+        progress.message = "Import selesai.";
+        bulkImportProgress.set(batchId, progress);
+      }
+      bulkImportProgressSteps.delete(batchId);
+
       /*
       =================================================
       RETURN
@@ -1513,6 +1623,13 @@ export const importBulkImportBatchService =
         photosImported,
       };
     } catch (error) {
+      setBulkImportProgress(batchId, {
+        status: "failed",
+        phase: "failed",
+        message: error instanceof Error ? error.message : "Import gagal.",
+      });
+      bulkImportProgressSteps.delete(batchId);
+
       /*
       =================================================
       ROLLBACK COPIED PHOTOS
