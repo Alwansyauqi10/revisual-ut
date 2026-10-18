@@ -93,6 +93,11 @@ export default function BulkImport() {
   ] = useState(false);
 
   const [
+    uploadProgress,
+    setUploadProgress,
+  ] = useState(0);
+
+  const [
     isImporting,
     setIsImporting,
   ] = useState(false);
@@ -128,6 +133,7 @@ export default function BulkImport() {
     setAnalysis(null);
     setReviewed(false);
     setImportProgress(null);
+    setUploadProgress(0);
 
     if (!file) {
       setSelectedFile(null);
@@ -176,6 +182,7 @@ export default function BulkImport() {
 
       try {
         setIsAnalyzing(true);
+        setUploadProgress(0);
         setErrorMessage("");
         setSuccessMessage("");
         setAnalysis(null);
@@ -185,8 +192,14 @@ export default function BulkImport() {
           await analyzeBulkImportService(
             numericEventId,
             selectedFile,
+            (percent) => {
+              setUploadProgress(
+                Math.min(100, Math.round(percent)),
+              );
+            },
           );
 
+        setUploadProgress(100);
         setAnalysis(
           response.data,
         );
@@ -340,6 +353,7 @@ export default function BulkImport() {
       setAnalysis(null);
       setReviewed(false);
       setImportProgress(null);
+      setUploadProgress(0);
       setErrorMessage("");
       setSuccessMessage("");
 
@@ -535,6 +549,63 @@ export default function BulkImport() {
             </div>
           )}
         </section>
+
+        {/* ANALYZE UPLOAD PROGRESS */}
+        {isAnalyzing && (
+          <section className="mt-6 rounded-2xl border border-[#071A33]/15 bg-white p-6 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#071A33]/5 text-[#071A33]">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-[#071A33]">
+                    {uploadProgress >= 100
+                      ? "Analyzing ZIP contents"
+                      : "Uploading ZIP file"}
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {uploadProgress >= 100
+                      ? "Upload complete. The server is checking student folders and photos. Please keep this page open."
+                      : "Sending the ZIP file to the server. Progress reflects the upload transfer."}
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 text-lg font-bold tabular-nums text-[#071A33]">
+                {uploadProgress}%
+              </span>
+            </div>
+
+            <div
+              className="mt-5 h-3 overflow-hidden rounded-full bg-gray-100"
+              role="progressbar"
+              aria-label="ZIP upload progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={uploadProgress}
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-200 ${
+                  uploadProgress >= 100 ? "bg-green-500" : "bg-[#071A33]"
+                }`}
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-col gap-1 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                {uploadProgress >= 100
+                  ? "ZIP uploaded — analysis still running"
+                  : `${(selectedFile!.size * uploadProgress / 100 / 1024 / 1024).toFixed(1)} MB of ${(selectedFile!.size / 1024 / 1024).toFixed(1)} MB sent`}
+              </span>
+              <span>
+                {uploadProgress >= 100
+                  ? "Checking ZIP contents"
+                  : "Do not close or refresh this page"}
+              </span>
+            </div>
+          </section>
+        )}
 
         {/* PREVIEW */}
         {analysis && (

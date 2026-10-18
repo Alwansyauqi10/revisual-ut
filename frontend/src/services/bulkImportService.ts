@@ -31,10 +31,26 @@ export interface BulkImportProgress {
 }
 export interface BulkImportProgressResponse { message: string; data: BulkImportProgress; }
 
-export const analyzeBulkImportService = async (eventId: number, file: File) => {
+export const analyzeBulkImportService = async (
+  eventId: number,
+  file: File,
+  onUploadProgress?: (percent: number) => void,
+) => {
   const formData = new FormData();
   formData.append("file", file);
-  const response = await axiosInstance.post<BulkImportAnalyzeResponse>(`/events/${eventId}/analyze`, formData);
+
+  const response = await axiosInstance.post<BulkImportAnalyzeResponse>(
+    `/events/${eventId}/analyze`,
+    formData,
+    {
+      onUploadProgress: (event) => {
+        if (event.total && onUploadProgress) {
+          onUploadProgress((event.loaded / event.total) * 100);
+        }
+      },
+    },
+  );
+
   return response.data;
 };
 
