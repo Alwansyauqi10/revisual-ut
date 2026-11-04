@@ -28,8 +28,7 @@ function PhotoResult() {
     fileName: string;
   } | null>(null);
 
-  const INSTAGRAM_URL =
-    "https://www.instagram.com/revisualproduction/";
+  const INSTAGRAM_URL = "https://www.instagram.com/revisualproduction/";
 
   // =====================================================
   // GET STUDENT
@@ -135,8 +134,6 @@ function PhotoResult() {
     void handleDownload(url, fileName);
   };
 
-  
-
   // =====================================================
   // LOADING
   // =====================================================
@@ -191,12 +188,16 @@ function PhotoResult() {
   const photo1Url = student.photo1Key ? `${API_URL}${student.photo1Key}` : null;
 
   const photo2Url = student.photo2Key ? `${API_URL}${student.photo2Key}` : null;
+  const photo3Url = student.photo3Key ? `${API_URL}${student.photo3Key}` : null;
+  const availablePhotos = [photo1Url, photo2Url, photo3Url].filter(
+    (url): url is string => Boolean(url),
+  );
 
   // =====================================================
   // PHOTO NOT AVAILABLE
   // =====================================================
 
-  if (!photo1Url || !photo2Url) {
+  if (availablePhotos.length === 0) {
     return (
       <main className="min-h-screen bg-[#071A33] px-6 py-24 text-white">
         <div className="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center text-center">
@@ -420,7 +421,7 @@ function PhotoResult() {
             </p>
 
             <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-white/30 sm:text-[10px]">
-              02 Photos
+              {String(availablePhotos.length).padStart(2, "0")} Photos
             </p>
           </div>
         </section>
@@ -430,124 +431,176 @@ function PhotoResult() {
         ================================================= */}
 
         <section className="mt-4 sm:mt-8 lg:mt-10">
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {/* =================================================
                 PHOTO 01
             ================================================= */}
+            {photo1Url && (
+              <article className="group overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#071A33]/80 shadow-2xl sm:rounded-[1.5rem]">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo1Url}
+                    alt={`${student.name} graduation photo 1`}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                  />
 
-            <article className="group overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#071A33]/80 shadow-2xl sm:rounded-[1.5rem]">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={photo1Url}
-                  alt={`${student.name} graduation photo 1`}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
-                />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+                  {/* Number */}
 
-                {/* Number */}
+                  <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-5 sm:top-5 sm:gap-3">
+                    <span className="text-[10px] font-medium tracking-[0.15em] text-white sm:text-xs">
+                      01
+                    </span>
 
-                <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-5 sm:top-5 sm:gap-3">
-                  <span className="text-[10px] font-medium tracking-[0.15em] text-white sm:text-xs">
-                    01
-                  </span>
+                    <span className="h-px w-6 bg-white/60 sm:w-8" />
+                  </div>
 
-                  <span className="h-px w-6 bg-white/60 sm:w-8" />
-                </div>
+                  {/* Label */}
 
-                {/* Label */}
-
-                <p className="absolute right-4 top-4 text-[8px] font-medium uppercase tracking-[0.15em] text-white/80 sm:right-5 sm:top-5 sm:text-[10px]">
-                  Graduation Moment
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-white/75">
-                    The moment.
-                  </p>
-
-                  <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
-                    A story of dedication, growth, and new beginnings.
+                  <p className="absolute right-4 top-4 text-[8px] font-medium uppercase tracking-[0.15em] text-white/80 sm:right-5 sm:top-5 sm:text-[10px]">
+                    Graduation Moment
                   </p>
                 </div>
 
-                {/* DOWNLOAD */}
+                <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-white/75">
+                      The moment.
+                    </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDownloadClick(
-                      photo1Url,
-                      `${student.nim}-photo-1.JPG`,
-                    )
-                  }
-                  className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
-                >
-                  Download ↓
-                </button>
-              </div>
-            </article>
+                    <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
+                      A story of dedication, growth, and new beginnings.
+                    </p>
+                  </div>
 
+                  {/* DOWNLOAD */}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownloadClick(
+                        photo1Url,
+                        `${student.nim}-photo-1.JPG`,
+                      )
+                    }
+                    className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
+                  >
+                    Download ↓
+                  </button>
+                </div>
+              </article>
+            )}
             {/* =================================================
                 PHOTO 02
             ================================================= */}
+            {photo2Url && (
+              <article className="group overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#071A33]/80 shadow-2xl sm:rounded-[1.5rem]">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo2Url}
+                    alt={`${student.name} graduation photo 2`}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                  />
 
-            <article className="group overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#071A33]/80 shadow-2xl sm:rounded-[1.5rem]">
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <img
-                  src={photo2Url}
-                  alt={`${student.name} graduation photo 2`}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
-                />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+                  {/* Number */}
 
-                {/* Number */}
+                  <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-5 sm:top-5 sm:gap-3">
+                    <span className="text-[10px] font-medium tracking-[0.15em] text-white sm:text-xs">
+                      02
+                    </span>
 
-                <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-5 sm:top-5 sm:gap-3">
-                  <span className="text-[10px] font-medium tracking-[0.15em] text-white sm:text-xs">
-                    02
-                  </span>
+                    <span className="h-px w-6 bg-white/60 sm:w-8" />
+                  </div>
 
-                  <span className="h-px w-6 bg-white/60 sm:w-8" />
-                </div>
+                  {/* Label */}
 
-                {/* Label */}
-
-                <p className="absolute right-4 top-4 text-[8px] font-medium uppercase tracking-[0.15em] text-white/80 sm:right-5 sm:top-5 sm:text-[10px]">
-                  Graduation Moment
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-white/75">
-                    The memory.
-                  </p>
-
-                  <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
-                    A moment worth looking back on, always.
+                  <p className="absolute right-4 top-4 text-[8px] font-medium uppercase tracking-[0.15em] text-white/80 sm:right-5 sm:top-5 sm:text-[10px]">
+                    Graduation Moment
                   </p>
                 </div>
 
-                {/* DOWNLOAD */}
+                <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-white/75">
+                      The memory.
+                    </p>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleDownloadClick(
-                      photo2Url,
-                      `${student.nim}-photo-2.JPG`,
-                    )
-                  }
-                  className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
-                >
-                  Download ↓
-                </button>
-              </div>
-            </article>
+                    <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
+                      A moment worth looking back on, always.
+                    </p>
+                  </div>
+
+                  {/* DOWNLOAD */}
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownloadClick(
+                        photo2Url,
+                        `${student.nim}-photo-2.JPG`,
+                      )
+                    }
+                    className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
+                  >
+                    Download ↓
+                  </button>
+                </div>
+              </article>
+            )}
+            {/* =================================================
+                PHOTO 03
+            ================================================= */}
+            {photo3Url && (
+              <article className="group overflow-hidden rounded-[1.15rem] border border-white/10 bg-[#071A33]/80 shadow-2xl sm:rounded-[1.5rem]">
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <img
+                    src={photo3Url}
+                    alt={`${student.name} graduation photo 3`}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
+
+                  <div className="absolute left-4 top-4 flex items-center gap-2 sm:left-5 sm:top-5 sm:gap-3">
+                    <span className="text-[10px] font-medium tracking-[0.15em] text-white sm:text-xs">
+                      03
+                    </span>
+                    <span className="h-px w-6 bg-white/60 sm:w-8" />
+                  </div>
+
+                  <p className="absolute right-4 top-4 text-[8px] font-medium uppercase tracking-[0.15em] text-white/80 sm:right-5 sm:top-5 sm:text-[10px]">
+                    Graduation Moment
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-white/75">
+                      The experience.
+                    </p>
+                    <p className="mt-1 hidden text-xs leading-5 text-white/35 sm:block">
+                      Every moment has a story worth sharing.{" "}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDownloadClick(
+                        photo3Url,
+                        `${student.nim}-photo-3.JPG`,
+                      )
+                    }
+                    className="shrink-0 rounded-full bg-white px-4 py-2.5 text-[10px] font-medium text-[#071A33] transition hover:bg-white/90 active:scale-[0.98] sm:px-5 sm:py-3 sm:text-xs"
+                  >
+                    Download ↓
+                  </button>
+                </div>
+              </article>
+            )}
           </div>
         </section>
 
@@ -644,8 +697,6 @@ function PhotoResult() {
             >
               Follow Instagram ↗
             </button>
-
-      
 
             <p className="mt-5 text-center text-[11px] text-white/30">
               Thank you for supporting us.

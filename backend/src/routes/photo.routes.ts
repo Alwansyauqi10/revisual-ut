@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 
 import {
@@ -26,6 +27,10 @@ router.post(
     },
     {
       name: "photo2",
+      maxCount: 1,
+    },
+    {
+      name: "photo3",
       maxCount: 1,
     },
   ]),

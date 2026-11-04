@@ -660,17 +660,17 @@ export default function BulkImport() {
                   icon={
                     <FileArchive className="h-5 w-5" />
                   }
-                  label="Photos 2/2"
+                  label="Photos 3/3"
                   value={
                     analysis.summary
-                      .photos2
+                      .photos3
                   }
                 />
               </div>
             </div>
 
             {/* PHOTO SUMMARY */}
-            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <MiniSummary
                 label="0 photos"
                 value={
@@ -696,10 +696,18 @@ export default function BulkImport() {
               />
 
               <MiniSummary
-                label="More than 2"
+                label="3 photos"
                 value={
                   analysis.summary
-                    .moreThan2
+                    .photos3
+                }
+              />
+
+              <MiniSummary
+                label="More than 3"
+                value={
+                  analysis.summary
+                    .moreThan3
                 }
               />
             </div>
@@ -1205,7 +1213,7 @@ function ResultBadge({
     },
 
     TOO_MANY_PHOTOS: {
-      label: "MORE THAN 2",
+      label: "MORE THAN 3",
       className:
         "bg-red-50 text-red-700 ring-red-200",
     },

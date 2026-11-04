@@ -93,7 +93,8 @@ interface AnalyzeResult {
     photos0: number;
     photos1: number;
     photos2: number;
-    moreThan2: number;
+    photos3: number;
+    moreThan3: number;  
     conflicts: number;
     invalid: number;
   };
@@ -846,11 +847,18 @@ export const analyzeBulkImportZipService =
             2,
         ).length;
 
-      const moreThan2 =
+      const photos3 =
+        students.filter(
+          (student) =>
+            student.photoCount ===
+            3,
+        ).length;
+
+      const moreThan3 =
         students.filter(
           (student) =>
             student.photoCount >
-            2,
+            3,
         ).length;
 
       /*
@@ -877,7 +885,9 @@ export const analyzeBulkImportZipService =
 
           photos2,
 
-          moreThan2,
+          photos3,
+
+          moreThan3,
 
           conflicts:
             conflicts.length,
@@ -1146,10 +1156,10 @@ export const importBulkImportBatchService =
       */
 
       if (
-        photos.length > 2
+        photos.length > 3
       ) {
         throw new Error(
-          `Student ${student.nim} has more than 2 photos.`,
+          `Student ${student.nim} has more than 3 photos.`,
         );
       }
 
@@ -1204,6 +1214,7 @@ export const importBulkImportBatchService =
       isAbsent: boolean;
       photo1Key: string | null;
       photo2Key: string | null;
+      photo3Key: string | null;
     }> = [];
 
     try {
@@ -1270,6 +1281,25 @@ export const importBulkImportBatchService =
           );
         }
 
+        let photo3Key: string | null = null;
+
+        if (
+          student.photos[2]
+        ) {
+          photo3Key =
+            await copyPhotoToStorage(
+              student.photos[2]
+                .absolutePath,
+
+              student.photos[2]
+                .originalName,
+            );
+
+          copiedPhotoKeys.push(
+            photo3Key,
+          );
+        }
+
         preparedStudents.push({
           sequenceNumber:
             student.sequenceNumber,
@@ -1286,6 +1316,7 @@ export const importBulkImportBatchService =
           photo1Key,
 
           photo2Key,
+          photo3Key,
         });
 
         completeBulkImportProgressStep(batchId);
@@ -1327,12 +1358,17 @@ export const importBulkImportBatchService =
                   string | null;
                 photo2Key:
                   string | null;
+                photo3Key:
+                  string | null;
               };
 
               oldPhoto1Key:
                 string | null;
 
               oldPhoto2Key:
+                string | null;
+
+              oldPhoto3Key:
                 string | null;
             }> = [];
 
@@ -1402,11 +1438,15 @@ export const importBulkImportBatchService =
                         isAbsent:
                           student.isAbsent,
 
-                        photo1Key:
-                          student.photo1Key,
-
-                        photo2Key:
-                          student.photo2Key,
+                        ...(student.photo1Key
+                          ? { photo1Key: student.photo1Key }
+                          : {}),
+                        ...(student.photo2Key
+                          ? { photo2Key: student.photo2Key }
+                          : {}),
+                        ...(student.photo3Key
+                          ? { photo3Key: student.photo3Key }
+                          : {}),
                       },
                     },
                   );
@@ -1423,6 +1463,9 @@ export const importBulkImportBatchService =
 
                   oldPhoto2Key:
                     existing.photo2Key,
+
+                  oldPhoto3Key:
+                    existing.photo3Key,
                 });
 
                 completeBulkImportProgressStep(batchId);
@@ -1461,6 +1504,9 @@ export const importBulkImportBatchService =
 
                       photo2Key:
                         student.photo2Key,
+
+                      photo3Key:
+                        student.photo3Key,
                     },
                   },
                 );
@@ -1476,6 +1522,9 @@ export const importBulkImportBatchService =
                   null,
 
                 oldPhoto2Key:
+                  null,
+
+                oldPhoto3Key:
                   null,
               });
 
@@ -1547,6 +1596,28 @@ export const importBulkImportBatchService =
           } catch (error) {
             console.error(
               "FAILED TO DELETE OLD PHOTO 2:",
+              error,
+            );
+          }
+        }
+
+        if (
+          item.oldPhoto3Key &&
+          item.oldPhoto3Key !==
+            item.student.photo3Key
+        ) {
+          try {
+            await fs.rm(
+              getPhotoDestination(
+                item.oldPhoto3Key,
+              ),
+              {
+                force: true,
+              },
+            );
+          } catch (error) {
+            console.error(
+              "FAILED TO DELETE OLD PHOTO 3:",
               error,
             );
           }

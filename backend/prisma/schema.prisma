@@ -46,6 +46,7 @@ model Student {
   isAbsent       Boolean  @default(false)
   photo1Key      String?
   photo2Key      String?
+  photo3Key      String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

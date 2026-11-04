@@ -32,8 +32,11 @@ export const searchStudentByNimController = async (
 
     const hasPhotos =
       student.event.photosAvailable &&
-      Boolean(student.photo1Key) &&
-      Boolean(student.photo2Key);
+      Boolean(
+        student.photo1Key ||
+        student.photo2Key ||
+        student.photo3Key
+      );
 
     if (!hasPhotos) {
       res.status(200).json({
@@ -64,6 +67,7 @@ export const searchStudentByNimController = async (
         },
         photo1Key: student.photo1Key,
         photo2Key: student.photo2Key,
+        photo3Key: student.photo3Key,
       },
     });
   } catch (error) {

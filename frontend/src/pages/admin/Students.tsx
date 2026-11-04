@@ -29,6 +29,7 @@ interface Student {
   isAbsent: boolean;
   photo1Key: string | null;
   photo2Key: string | null;
+  photo3Key: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +76,7 @@ function Students() {
 
   const [createPhoto1, setCreatePhoto1] = useState<File | null>(null);
   const [createPhoto2, setCreatePhoto2] = useState<File | null>(null);
+  const [createPhoto3, setCreatePhoto3] = useState<File | null>(null);
 
   // =========================================================
   // EDIT
@@ -94,6 +96,7 @@ function Students() {
 
   const [editPhoto1, setEditPhoto1] = useState<File | null>(null);
   const [editPhoto2, setEditPhoto2] = useState<File | null>(null);
+  const [editPhoto3, setEditPhoto3] = useState<File | null>(null);
 
   // =========================================================
   // DELETE
@@ -213,7 +216,8 @@ function Students() {
 
     const maxFileSize = 10 * 1024 * 1024;
 
-    for (const photo of [createPhoto1, createPhoto2]) {
+    for (const photo of [createPhoto1, createPhoto2, createPhoto3]) {
+      if (!photo) continue;
       if (!allowedTypes.includes(photo.type)) {
         setCreateError("Only JPG, PNG, and WebP images are allowed.");
         return;
@@ -242,14 +246,14 @@ function Students() {
 
       createdStudentId = studentId;
 
-      await uploadStudentPhotosService(
-        parsedEventId,
-        studentId,
-        createPhoto1,
-        createPhoto2,
-      );
+      await uploadStudentPhotosService(parsedEventId, studentId, {
+        photo1: createPhoto1,
+        photo2: createPhoto2,
+        photo3: createPhoto3 ?? undefined,
+      });
 
       await getStudents();
+      window.alert("Student berhasil ditambahkan!");
 
       setStudentSequenceNumber("");
       setStudentNim("");
@@ -257,6 +261,7 @@ function Students() {
 
       setCreatePhoto1(null);
       setCreatePhoto2(null);
+      setCreatePhoto3(null);
 
       setIsCreateDialogOpen(false);
     } catch (error) {
@@ -302,6 +307,7 @@ function Students() {
 
     setEditPhoto1(null);
     setEditPhoto2(null);
+    setEditPhoto3(null);
 
     setEditError("");
 
@@ -336,26 +342,22 @@ function Students() {
       return;
     }
 
-    if (editPhoto1 || editPhoto2) {
-      if (!editPhoto1 || !editPhoto2) {
-        setEditError("Please select both Photo 1 and Photo 2.");
+    const selectedEditPhotos = [editPhoto1, editPhoto2, editPhoto3].filter(
+      (photo): photo is File => photo !== null,
+    );
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const maxFileSize = 10 * 1024 * 1024;
+
+    for (const photo of selectedEditPhotos) {
+      if (!allowedTypes.includes(photo.type)) {
+        setEditError("Only JPG, PNG, and WebP images are allowed.");
         return;
       }
 
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
-
-      const maxFileSize = 10 * 1024 * 1024;
-
-      for (const photo of [editPhoto1, editPhoto2]) {
-        if (!allowedTypes.includes(photo.type)) {
-          setEditError("Only JPG, PNG, and WebP images are allowed.");
-          return;
-        }
-
-        if (photo.size > maxFileSize) {
-          setEditError("Each photo must be 10 MB or smaller.");
-          return;
-        }
+      if (photo.size > maxFileSize) {
+        setEditError("Each photo must be 10 MB or smaller.");
+        return;
       }
     }
 
@@ -374,12 +376,15 @@ function Students() {
 
       let updatedStudent = studentResponse.data;
 
-      if (editPhoto1 && editPhoto2) {
+      if (selectedEditPhotos.length > 0) {
         const photoResponse = await uploadStudentPhotosService(
           parsedEventId,
           editingStudent.id,
-          editPhoto1,
-          editPhoto2,
+          {
+            photo1: editPhoto1 ?? undefined,
+            photo2: editPhoto2 ?? undefined,
+            photo3: editPhoto3 ?? undefined,
+          },
         );
 
         updatedStudent = photoResponse.data;
@@ -400,6 +405,7 @@ function Students() {
 
       setEditPhoto1(null);
       setEditPhoto2(null);
+      setEditPhoto3(null);
     } catch (error) {
       console.error("GAGAL UPDATE STUDENT:", error);
 
@@ -524,6 +530,7 @@ function Students() {
 
                 setCreatePhoto1(null);
                 setCreatePhoto2(null);
+                setCreatePhoto3(null);
 
                 setCreateError("");
                 setIsCreateDialogOpen(true);
@@ -648,7 +655,7 @@ function Students() {
             </div>
           ) : students.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1100px] border-collapse">
+              <table className="w-full min-w-[1200px] border-collapse">
                 <thead>
                   <tr className="border-b border-[#071A33]/6 bg-[#FBFCFD] text-left">
                     <th className="px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#071A33]/40">
@@ -672,6 +679,10 @@ function Students() {
                     </th>
 
                     <th className="px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#071A33]/40">
+                      Photo 3
+                    </th>
+
+                    <th className="px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#071A33]/40">
                       Status
                     </th>
 
@@ -686,6 +697,7 @@ function Students() {
                     const photo1Url = getPhotoUrl(student.photo1Key);
 
                     const photo2Url = getPhotoUrl(student.photo2Key);
+                    const photo3Url = getPhotoUrl(student.photo3Key);
 
                     return (
                       <tr
@@ -718,7 +730,7 @@ function Students() {
 
                         {/* PHOTOS */}
 
-                        {[photo1Url, photo2Url].map((photoUrl, photoIndex) => (
+                        {[photo1Url, photo2Url, photo3Url].map((photoUrl, photoIndex) => (
                           <td
                             key={`${student.id}-photo-${photoIndex}`}
                             className="px-6 py-4 align-middle"
@@ -922,6 +934,7 @@ function Students() {
 
               setCreatePhoto1(null);
               setCreatePhoto2(null);
+              setCreatePhoto3(null);
 
               setCreateError("");
             }
@@ -1053,10 +1066,35 @@ function Students() {
                 )}
               </div>
 
+              {/* PHOTO 3 */}
+
+              <div className="space-y-2">
+                <label htmlFor="create-photo-3" className="text-sm font-medium">
+                  Photo 3 <span className="text-[#071A33]/40">(Optional)</span>
+                </label>
+
+                <input
+                  id="create-photo-3"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={isCreating}
+                  onChange={(event) => {
+                    setCreatePhoto3(event.target.files?.[0] ?? null);
+                  }}
+                  className="block w-full cursor-pointer rounded-lg border border-[#071A33]/10 bg-white text-sm file:mr-4 file:border-0 file:bg-[#071A33] file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-white hover:file:bg-[#0B2545]"
+                />
+
+                {createPhoto3 && (
+                  <p className="text-xs text-[#071A33]/45">
+                    Selected: {createPhoto3.name}
+                  </p>
+                )}
+              </div>
+
               <p className="text-xs leading-5 text-[#071A33]/40">
-                Supported formats: JPG, PNG, and WebP.
+                Photo 1 and Photo 2 are required. Photo 3 is optional.
                 <br />
-                Maximum file size: 10 MB per photo.
+                Supported formats: JPG, PNG, and WebP. Maximum 10 MB per photo.
               </p>
 
               {createError && (
@@ -1103,6 +1141,7 @@ function Students() {
 
               setEditPhoto1(null);
               setEditPhoto2(null);
+              setEditPhoto3(null);
 
               setEditError("");
             }
@@ -1274,12 +1313,49 @@ function Students() {
                     </p>
                   )}
                 </div>
+
+                {/* PHOTO 3 */}
+
+                <div className="space-y-2">
+                  <label htmlFor="edit-photo-3" className="text-sm font-medium">
+                    Photo 3
+                  </label>
+
+                  {editingStudent?.photo3Key ? (
+                    <img
+                      src={getPhotoUrl(editingStudent.photo3Key) ?? ""}
+                      alt={`${editingStudent.name} Photo 3`}
+                      className="h-24 w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-24 items-center justify-center rounded-lg bg-[#F5F7FA] text-[10px] uppercase tracking-[0.1em] text-[#071A33]/30">
+                      No Photo
+                    </div>
+                  )}
+
+                  <input
+                    id="edit-photo-3"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={isUpdating}
+                    onChange={(event) =>
+                      setEditPhoto3(event.target.files?.[0] ?? null)
+                    }
+                    className="block w-full cursor-pointer rounded-lg border border-[#071A33]/10 bg-white text-xs file:mr-3 file:border-0 file:bg-[#071A33] file:px-3 file:py-2.5 file:text-xs file:font-medium file:text-white hover:file:bg-[#0B2545]"
+                  />
+
+                  {editPhoto3 && (
+                    <p className="text-xs text-[#071A33]/45">
+                      Selected: {editPhoto3.name}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <p className="text-xs leading-5 text-[#071A33]/40">
-                Leave both photo fields empty to keep the current photos.
+                Leave all photo fields empty to keep the current photos.
                 <br />
-                To replace photos, select both Photo 1 and Photo 2.
+                Select any photo field to upload or replace only that photo.
                 <br />
                 Supported formats: JPG, PNG, and WebP. Maximum 10 MB per photo.
               </p>

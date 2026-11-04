@@ -8,9 +8,7 @@ export const getStudentStatsService = async (
     select: { id: true },
   });
 
-  if (!event) {
-    return null;
-  }
+  if (!event) return null;
 
   const [
     totalStudents,
@@ -19,25 +17,16 @@ export const getStudentStatsService = async (
     photos0,
     photos1,
     photos2,
+    photos3,
   ] = await Promise.all([
+    prisma.student.count({ where: { eventId } }),
+
     prisma.student.count({
-      where: {
-        eventId,
-      },
+      where: { eventId, isAbsent: false },
     }),
 
     prisma.student.count({
-      where: {
-        eventId,
-        isAbsent: false,
-      },
-    }),
-
-    prisma.student.count({
-      where: {
-        eventId,
-        isAbsent: true,
-      },
+      where: { eventId, isAbsent: true },
     }),
 
     prisma.student.count({
@@ -45,6 +34,7 @@ export const getStudentStatsService = async (
         eventId,
         photo1Key: null,
         photo2Key: null,
+        photo3Key: null,
       },
     }),
 
@@ -53,16 +43,19 @@ export const getStudentStatsService = async (
         eventId,
         OR: [
           {
-            photo1Key: {
-              not: null,
-            },
+            photo1Key: { not: null },
             photo2Key: null,
+            photo3Key: null,
           },
           {
             photo1Key: null,
-            photo2Key: {
-              not: null,
-            },
+            photo2Key: { not: null },
+            photo3Key: null,
+          },
+          {
+            photo1Key: null,
+            photo2Key: null,
+            photo3Key: { not: null },
           },
         ],
       },
@@ -71,12 +64,32 @@ export const getStudentStatsService = async (
     prisma.student.count({
       where: {
         eventId,
-        photo1Key: {
-          not: null,
-        },
-        photo2Key: {
-          not: null,
-        },
+        OR: [
+          {
+            photo1Key: { not: null },
+            photo2Key: { not: null },
+            photo3Key: null,
+          },
+          {
+            photo1Key: { not: null },
+            photo2Key: null,
+            photo3Key: { not: null },
+          },
+          {
+            photo1Key: null,
+            photo2Key: { not: null },
+            photo3Key: { not: null },
+          },
+        ],
+      },
+    }),
+
+    prisma.student.count({
+      where: {
+        eventId,
+        photo1Key: { not: null },
+        photo2Key: { not: null },
+        photo3Key: { not: null },
       },
     }),
   ]);
@@ -88,5 +101,6 @@ export const getStudentStatsService = async (
     photos0,
     photos1,
     photos2,
+    photos3,
   };
 };

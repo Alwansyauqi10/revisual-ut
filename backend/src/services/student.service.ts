@@ -1,3 +1,4 @@
+
 import { prisma } from "../lib/prisma.js";
 import { deletePhotoFile } from "../lib/photo-storage.js";
 
@@ -152,15 +153,21 @@ export const deleteStudentService = async (
 
   deletePhotoFile(student.photo1Key);
   deletePhotoFile(student.photo2Key);
+  deletePhotoFile(student.photo3Key);
 
   return deletedStudent;
+};
+
+type UpdateStudentPhotosInput = {
+  photo1Key?: string;
+  photo2Key?: string;
+  photo3Key?: string;
 };
 
 export const updateStudentPhotosService = async (
   studentId: number,
   eventId: number,
-  photo1Key: string | null,
-  photo2Key: string | null,
+  photos: UpdateStudentPhotosInput,
 ) => {
   const student = await prisma.student.findUnique({
     where: {
@@ -176,31 +183,45 @@ export const updateStudentPhotosService = async (
     return null;
   }
 
-  const oldPhoto1Key = student.photo1Key;
-  const oldPhoto2Key = student.photo2Key;
-
   const updatedStudent = await prisma.student.update({
     where: {
       id: studentId,
     },
     data: {
-      photo1Key,
-      photo2Key,
+      ...(photos.photo1Key !== undefined
+        ? { photo1Key: photos.photo1Key }
+        : {}),
+      ...(photos.photo2Key !== undefined
+        ? { photo2Key: photos.photo2Key }
+        : {}),
+      ...(photos.photo3Key !== undefined
+        ? { photo3Key: photos.photo3Key }
+        : {}),
     },
   });
 
   if (
-    oldPhoto1Key &&
-    oldPhoto1Key !== photo1Key
+    photos.photo1Key !== undefined &&
+    student.photo1Key &&
+    student.photo1Key !== photos.photo1Key
   ) {
-    deletePhotoFile(oldPhoto1Key);
+    deletePhotoFile(student.photo1Key);
   }
 
   if (
-    oldPhoto2Key &&
-    oldPhoto2Key !== photo2Key
+    photos.photo2Key !== undefined &&
+    student.photo2Key &&
+    student.photo2Key !== photos.photo2Key
   ) {
-    deletePhotoFile(oldPhoto2Key);
+    deletePhotoFile(student.photo2Key);
+  }
+
+  if (
+    photos.photo3Key !== undefined &&
+    student.photo3Key &&
+    student.photo3Key !== photos.photo3Key
+  ) {
+    deletePhotoFile(student.photo3Key);
   }
 
   return updatedStudent;

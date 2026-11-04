@@ -11,8 +11,9 @@ export interface PublicStudent {
   nim: string;
   name: string;
   event: PublicStudentEvent;
-  photo1Key?: string;
-  photo2Key?: string;
+  photo1Key?: string | null;
+  photo2Key?: string | null;
+  photo3Key?: string | null;
 }
 
 export interface PublicStudentSearchResponse {
@@ -20,18 +21,11 @@ export interface PublicStudentSearchResponse {
   data: PublicStudent;
 }
 
-export const searchStudentByNimService = async (
-  nim: string,
-) => {
+export const searchStudentByNimService = async (nim: string) => {
   const response =
     await axiosInstance.get<PublicStudentSearchResponse>(
       "/students/search",
-      {
-        params: {
-          nim,
-        },
-      },
+      { params: { nim } },
     );
-
   return response.data;
 };

@@ -69,16 +69,37 @@ export const deleteStudentService = async (
   return response.data;
 };
 
+
 export const uploadStudentPhotosService = async (
   eventId: number,
   studentId: number,
-  photo1: File,
-  photo2: File,
+  photos: {
+    photo1?: File;
+    photo2?: File;
+    photo3?: File;
+  },
 ) => {
   const formData = new FormData();
 
-  formData.append("photo1", photo1);
-  formData.append("photo2", photo2);
+  if (photos.photo1) {
+    formData.append("photo1", photos.photo1);
+  }
+
+  if (photos.photo2) {
+    formData.append("photo2", photos.photo2);
+  }
+
+  if (photos.photo3) {
+    formData.append("photo3", photos.photo3);
+  }
+
+  if (
+    !photos.photo1 &&
+    !photos.photo2 &&
+    !photos.photo3
+  ) {
+    throw new Error("At least one photo must be selected.");
+  }
 
   const response = await axiosInstance.post(
     `/events/${eventId}/students/${studentId}/photos`,

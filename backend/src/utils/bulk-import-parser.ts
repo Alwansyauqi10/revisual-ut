@@ -1,3 +1,4 @@
+
 import path from "node:path";
 
 export interface ParsedStudentFolder {
@@ -18,10 +19,11 @@ export interface BulkImportStudentPreview
   photos: ParsedPhotoFile[];
   photoCount: number;
   photoStatus:
-    | "0/2"
-    | "1/2"
-    | "2/2"
-    | "MORE_THAN_2";
+    | "0/3"
+    | "1/3"
+    | "2/3"
+    | "3/3"
+    | "MORE_THAN_3";
   result:
     | "READY"
     | "MISSING_PHOTOS"
@@ -51,19 +53,6 @@ export const parseStudentFolderName = (
     };
   }
 
-  /*
-  =====================================================
-  ATTENDANCE
-  =====================================================
-
-  Support both:
-
-  50.Nama_123456789_GA HADIR
-  50.Nama_123456789_GA_HADIR
-
-  GA HADIR = ABSENT
-  */
-
   const upperFolderName =
     normalized.toUpperCase();
 
@@ -83,16 +72,9 @@ export const parseStudentFolderName = (
     absentSuffix
       ? normalized.slice(
           0,
-          normalized.length -
-            absentSuffix.length,
+          normalized.length - absentSuffix.length,
         )
       : normalized;
-
-  /*
-  =====================================================
-  SEQUENCE NUMBER
-  =====================================================
-  */
 
   const firstDotIndex =
     folderWithoutAttendance.indexOf(".");
@@ -118,8 +100,7 @@ export const parseStudentFolderName = (
   if (!sequenceText) {
     return {
       success: false,
-      error:
-        "Sequence number is missing.",
+      error: "Sequence number is missing.",
     };
   }
 
@@ -130,13 +111,10 @@ export const parseStudentFolderName = (
     };
   }
 
-  const sequenceNumber =
-    Number(sequenceText);
+  const sequenceNumber = Number(sequenceText);
 
   if (
-    !Number.isSafeInteger(
-      sequenceNumber,
-    ) ||
+    !Number.isSafeInteger(sequenceNumber) ||
     sequenceNumber <= 0
   ) {
     return {
@@ -145,12 +123,6 @@ export const parseStudentFolderName = (
         "Sequence number must be a positive integer.",
     };
   }
-
-  /*
-  =====================================================
-  NAME + NIM
-  =====================================================
-  */
 
   const lastUnderscoreIndex =
     remaining.lastIndexOf("_");
@@ -196,7 +168,6 @@ export const parseStudentFolderName = (
 
   return {
     success: true,
-
     data: {
       sequenceNumber,
       name,
@@ -211,9 +182,7 @@ export const isSupportedPhotoFile = (
   fileName: string,
 ): boolean => {
   const extension =
-    path
-      .extname(fileName)
-      .toLowerCase();
+    path.extname(fileName).toLowerCase();
 
   return [
     ".jpg",
@@ -226,47 +195,27 @@ export const isSupportedPhotoFile = (
 export const getPhotoStatus = (
   photoCount: number,
 ): BulkImportStudentPreview["photoStatus"] => {
-  if (photoCount === 0) {
-    return "0/2";
-  }
+  if (photoCount === 0) return "0/3";
+  if (photoCount === 1) return "1/3";
+  if (photoCount === 2) return "2/3";
+  if (photoCount === 3) return "3/3";
 
-  if (photoCount === 1) {
-    return "1/2";
-  }
-
-  if (photoCount === 2) {
-    return "2/2";
-  }
-
-  return "MORE_THAN_2";
+  return "MORE_THAN_3";
 };
 
 export const getImportResult = (
   isAbsent: boolean,
   photoCount: number,
 ): BulkImportStudentPreview["result"] => {
-  /*
-  GA HADIR tetap dianggap ABSENT
-  walaupun folder kosong.
-  */
-
   if (isAbsent) {
     return "ABSENT";
   }
 
-  /*
-  Present tanpa foto / foto kurang
-  tetap valid untuk import.
-  */
-
-  if (
-    photoCount === 0 ||
-    photoCount === 1
-  ) {
+  if (photoCount <= 1) {
     return "MISSING_PHOTOS";
   }
 
-  if (photoCount === 2) {
+  if (photoCount <= 3) {
     return "READY";
   }
 
@@ -277,23 +226,16 @@ export const buildStudentPreview = (
   parsedStudent: ParsedStudentFolder,
   photos: ParsedPhotoFile[],
 ): BulkImportStudentPreview => {
-  const photoCount =
-    photos.length;
+  const photoCount = photos.length;
 
   return {
     ...parsedStudent,
-
     photos,
-
     photoCount,
-
-    photoStatus:
-      getPhotoStatus(photoCount),
-
-    result:
-      getImportResult(
-        parsedStudent.isAbsent,
-        photoCount,
-      ),
+    photoStatus: getPhotoStatus(photoCount),
+    result: getImportResult(
+      parsedStudent.isAbsent,
+      photoCount,
+    ),
   };
 };

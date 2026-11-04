@@ -3,7 +3,7 @@ import { Link } from "react-router";
 function Footer() {
   return (
     <footer className="bg-[#071A33]">
-      <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="mx-auto max-w-7xl py-12">
         <div className="flex flex-col gap-8 border-b border-white/50 pb-8  sm:flex-row sm:items-center sm:justify-between">
           <Link to="/" className="shrink-0">
             <img

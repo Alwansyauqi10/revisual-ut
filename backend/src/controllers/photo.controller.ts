@@ -16,47 +16,89 @@ export const uploadStudentPhotosController = async (
   req: Request,
   res: Response,
 ) => {
+  const files = req.files as
+    | {
+        [fieldname: string]: Express.Multer.File[];
+      }
+    | undefined;
+
+  const photo1 = files?.photo1?.[0];
+  const photo2 = files?.photo2?.[0];
+  const photo3 = files?.photo3?.[0];
+
+  const uploadedFiles = [
+    photo1,
+    photo2,
+    photo3,
+  ].filter(
+    (file): file is Express.Multer.File =>
+      Boolean(file),
+  );
+
+  const cleanupUploadedFiles = () => {
+    for (const file of uploadedFiles) {
+      try {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      } catch (error) {
+        console.error(
+          "FAILED TO CLEANUP UPLOADED PHOTO:",
+          error,
+        );
+      }
+    }
+  };
+
   try {
     const eventId = Number(req.params.eventId);
     const studentId = Number(req.params.studentId);
 
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
+    if (
+      !Number.isInteger(eventId) ||
+      !Number.isInteger(studentId)
+    ) {
+      cleanupUploadedFiles();
 
-    const photo1 = files?.photo1?.[0];
-    const photo2 = files?.photo2?.[0];
+      res.status(400).json({
+        message: "Invalid event ID or student ID.",
+      });
+      return;
+    }
 
-    if (!photo1 && !photo2) {
+    if (uploadedFiles.length === 0) {
       res.status(400).json({
         message: "At least one photo is required.",
       });
       return;
     }
 
-    const photo1Key = photo1
-      ? `/uploads/photos/${photo1.filename}`
-      : null;
-
-    const photo2Key = photo2
-      ? `/uploads/photos/${photo2.filename}`
-      : null;
+    const photos = {
+      ...(photo1
+        ? {
+            photo1Key: `/uploads/photos/${photo1.filename}`,
+          }
+        : {}),
+      ...(photo2
+        ? {
+            photo2Key: `/uploads/photos/${photo2.filename}`,
+          }
+        : {}),
+      ...(photo3
+        ? {
+            photo3Key: `/uploads/photos/${photo3.filename}`,
+          }
+        : {}),
+    };
 
     const student = await updateStudentPhotosService(
       studentId,
       eventId,
-      photo1Key,
-      photo2Key,
+      photos,
     );
 
     if (!student) {
-      if (photo1 && fs.existsSync(photo1.path)) {
-        fs.unlinkSync(photo1.path);
-      }
-
-      if (photo2 && fs.existsSync(photo2.path)) {
-        fs.unlinkSync(photo2.path);
-      }
+      cleanupUploadedFiles();
 
       res.status(404).json({
         message: "Student not found.",
@@ -65,14 +107,16 @@ export const uploadStudentPhotosController = async (
     }
 
     res.status(200).json({
-      message: "Student photos uploaded successfully",
+      message: "Student photos uploaded successfully.",
       data: student,
     });
   } catch (error) {
+    cleanupUploadedFiles();
+
     console.error("UPLOAD STUDENT PHOTOS ERROR:", error);
 
     res.status(500).json({
-      message: "Internal server error",
+      message: "Internal server error.",
     });
   }
 };
@@ -92,9 +136,13 @@ export const downloadStudentPhotoController = async (
       return;
     }
 
-    if (photoNumber !== 1 && photoNumber !== 2) {
+    if (
+      photoNumber !== 1 &&
+      photoNumber !== 2 &&
+      photoNumber !== 3
+    ) {
       res.status(400).json({
-        message: "Photo number must be 1 or 2.",
+        message: "Photo number must be 1, 2, or 3.",
       });
       return;
     }
@@ -115,7 +163,9 @@ export const downloadStudentPhotoController = async (
     const photoKey =
       photoNumber === 1
         ? student.photo1Key
-        : student.photo2Key;
+        : photoNumber === 2
+          ? student.photo2Key
+          : student.photo3Key;
 
     if (!photoKey) {
       res.status(404).json({
@@ -162,7 +212,7 @@ export const downloadStudentPhotoController = async (
     console.error("DOWNLOAD PHOTO ERROR:", error);
 
     res.status(500).json({
-      message: "Internal server error",
+      message: "Internal server error.",
     });
   }
 };

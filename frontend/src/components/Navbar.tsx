@@ -10,7 +10,7 @@ function Navbar() {
 
   return (
     <nav className="absolute top-0 left-0 right-0 z-50 bg-[#071A33]">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between">
         {/* LOGO */}
         <Link to="/" onClick={closeMenu}>
           <img

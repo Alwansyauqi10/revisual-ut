@@ -66,7 +66,7 @@ export const uploadPhotos = multer({
   fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024,
-    files: 2,
+    files: 3,
   },
 });
 
@@ -87,7 +87,7 @@ export const handleUploadError = (
 
     if (error.code === "LIMIT_FILE_COUNT") {
       res.status(400).json({
-        message: "Maximum 2 photos are allowed.",
+        message: "Maximum 3 photos are allowed.",
       });
       return;
     }
@@ -95,7 +95,7 @@ export const handleUploadError = (
     if (error.code === "LIMIT_UNEXPECTED_FILE") {
       res.status(400).json({
         message:
-          "Unexpected file field. Use photo1 and photo2.",
+          "Unexpected file field. Use photo1, photo2, or photo3.",
       });
       return;
     }
