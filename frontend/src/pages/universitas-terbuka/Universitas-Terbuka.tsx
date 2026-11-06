@@ -7,9 +7,7 @@ function UniversitasTerbuka() {
   const [nim, setNim] = useState("");
   const [searchError, setSearchError] = useState("");
 
-  const handleSearch = (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const cleanNim = nim.trim();
@@ -21,11 +19,7 @@ function UniversitasTerbuka() {
 
     setSearchError("");
 
-    navigate(
-      `/universitas-terbuka/photos?nim=${encodeURIComponent(
-        cleanNim,
-      )}`,
-    );
+    navigate(`/universitas-terbuka/photos?nim=${encodeURIComponent(cleanNim)}`);
   };
 
   return (
@@ -55,7 +49,6 @@ function UniversitasTerbuka() {
 
         <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl justify-center items-center px-5 py-28 sm:px-8 sm:py-32 lg:px-16">
           <div className="w-full max-w-4xl">
-
             {/* Eyebrow */}
 
             <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-white/55 sm:text-sm">
@@ -73,8 +66,7 @@ function UniversitasTerbuka() {
             {/* Description */}
 
             <p className="mt-7 max-w-xl text-sm leading-6 text-white/60 sm:mt-8 sm:text-lg sm:leading-7">
-              Find your graduation photos and keep the
-              moment forever.
+              Foto Wisuda Universitas Terbuka bisa diakses setelah <span className="font-semibold text-white">10 Hari</span> Wisuda berlangsung.
             </p>
 
             {/* =================================================
@@ -91,9 +83,7 @@ function UniversitasTerbuka() {
                 <input
                   type="text"
                   value={nim}
-                  onChange={(event) =>
-                    setNim(event.target.value)
-                  }
+                  onChange={(event) => setNim(event.target.value)}
                   placeholder="Enter your NIM"
                   inputMode="numeric"
                   autoComplete="off"
@@ -122,9 +112,7 @@ function UniversitasTerbuka() {
               {/* Error */}
 
               {searchError && (
-                <p className="mt-3 px-2 text-xs text-red-300">
-                  {searchError}
-                </p>
+                <p className="mt-3 px-2 text-xs text-red-300">{searchError}</p>
               )}
             </div>
           </div>
@@ -149,8 +137,7 @@ function UniversitasTerbuka() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-35"
           style={{
-            backgroundImage:
-              "url('/background-section3.jpg')",
+            backgroundImage: "url('/background-section3.jpg')",
           }}
         />
 
@@ -171,8 +158,7 @@ function UniversitasTerbuka() {
             </h2>
 
             <p className="mt-6 max-w-xl text-sm leading-6 text-white/45 sm:text-lg sm:leading-7">
-              A simple way to find, relive, and keep your
-              graduation photos.
+              A simple way to find, relive, and keep your graduation photos.
             </p>
           </div>
 
@@ -195,8 +181,7 @@ function UniversitasTerbuka() {
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-white/40">
-                Enter your NIM to find your graduation
-                photos.
+                Enter your NIM to find your graduation photos.
               </p>
             </div>
 
@@ -216,8 +201,7 @@ function UniversitasTerbuka() {
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-white/40">
-                Find your graduation moments from your
-                event.
+                Find your graduation moments from your event.
               </p>
             </div>
 
