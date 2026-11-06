@@ -65,8 +65,8 @@ function UniversitasTerbuka() {
 
             {/* Description */}
 
-            <p className="mt-7 max-w-2xl text-sm leading-6 text-white/60 sm:mt-8 sm:text-lg sm:leading-7">
-              Foto Wisuda Universitas Terbuka bisa diakses setelah <span className="font-semibold text-white">10 Hari</span> Wisuda berlangsung.
+            <p className="mt-7 max-w-3xl text-sm leading-6 text-white/60 sm:mt-8 sm:text-lg sm:leading-7">
+              Foto Wisuda Universitas Terbuka bisa diakses setelah <span className="font-semibold text-white">10 Hari</span>acara Wisuda berlangsung.
             </p>
 
             {/* =================================================
